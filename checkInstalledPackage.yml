@@ -1,0 +1,37 @@
+---
+ - hosts: all
+   vars:
+     package: 'openssh-server'
+     hostos: "{{ ansible_distribution }}"
+     ubuntuos: "{{ hostos == 'Ubuntu' or hostos == 'Debian' }}"
+     redhatos: "{{ hostos == 'Redhat' or hostos == 'CentOS' }}"
+   tasks:
+   - name: Check if the {{ package }} is installed - For Ubuntu/Debian
+     shell: dpkg --status {{ package }} | grep 'install ok installed'
+     register: package_status
+     failed_when: no
+     #when: hostos == 'Debian' or hostos == 'Ubuntu'
+     when: ubuntuos
+
+    #- name: Check if the {{ package }} is installed - For RedHat/CentOS
+     #yum:
+     #  list: package
+     #register: package_status
+     #failed_when: no
+     #when: redhatos
+
+   - name: Check if the {{ package }} is installed - For RedHat/CentOS
+     shell: yum list installed | grep {{ package }}
+     register: package_status
+     failed_when: no
+     args:
+      warn: no
+     when: redhatos
+
+   - debug:
+       msg: "This is |redhat-{{ redhatos }}|,|ubuntu-{{ ubuntuos }}|,what i could get package-result->{{ package_status }}"
+       when: ubuntuos
+   - debug:
+       msg: "This is |redhat-{{ redhatos }}|,|ubuntu-{{ ubuntuos }}|,what i could get package-result->{{ package_status }}"
+       when: redhatos
+       
