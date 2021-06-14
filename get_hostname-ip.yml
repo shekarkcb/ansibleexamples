@@ -1,0 +1,27 @@
+---
+#- hosts: all
+- hosts: localhost
+  gather_facts: true
+  connection: local
+  tasks:
+  - name: Get the Hostname of the remote machine ( via inventory_hostname)
+    debug: var=inventory_hostname
+  
+  - name: Get the Hostname of the remote machine ( via ansible_hostname)
+    debug: var=ansible_hostname
+  
+  - name: Get the Hostname of the remote machine ( via inventory_hostname_short )
+    debug: var=inventory_hostname_short
+  
+  - name: Get the Hostname | IP of the remote machine (via ansible_host )
+    debug: var=ansible_host
+
+  - name: Get the Host IP of the remote machine ( via hostvars )
+    debug: var=hostvars[inventory_hostname]['ansible_default_ipv4']['address']
+
+  - name: Get all of the IP of the remote machine ( via ansible_all_ipv4_addresses )
+    debug: var=ansible_all_ipv4_addresses
+    
+  - name: Get all of the IP of the remote machine  ( via ansible_default_ipv4.address)
+    debug: var=ansible_default_ipv4.address
+ 
