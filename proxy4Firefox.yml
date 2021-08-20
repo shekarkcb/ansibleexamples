@@ -1,0 +1,55 @@
+---
+ - hosts: all
+   become: yes
+   become_user: root
+   become_method: sudo
+   vars:
+     filePath: "/usr/lib/firefox/browser/defaults/preferences/syspref.js"
+     hostos: "{{ ansible_distribution }}"
+     ubuntuos: "{{ hostos == 'Ubuntu' or hostos == 'Debian' }}"
+     redhatos: "{{ hostos == 'RedHat' or hostos == 'CentOS' }}"
+     PROXY_URL: "proxy.abcd.efgh.com"
+     PROXY_PORT: 3128
+     proxyTimeout: 2
+   tasks:
+   - name: Check if the proxy preference file {{ filePath }} exists
+     stat:
+       path: "{{ filePath }}"
+     register: file_exists
+
+   - debug: var={{ file_exists }}
+
+   - name: Check if the proxy url is reachable !!!
+     uri:
+       url: "{{ proxyURL }}:{{proxyPort}}"
+       timeout: "{{ proxyTimeout }}"
+       return_content: yes
+     ignore_errors: yes
+     no_log: true
+     register: url_content
+
+   - block:
+       - name: Validation of the proxy URL
+         debug:
+            msg: "ERROR: Looks like {{proxyURL}}:{{proxyPort}} is not reachable !!!, skipping installation"
+       - meta: end_play
+     when: url_content.status < 0
+
+   - name: Add the line for proxy conf
+     blockinfile:
+       path: "{{ filePath }}"
+       create: yes
+       block: |
+         pref("network.proxy.backup.ftp", "");
+         pref("network.proxy.backup.ftp_port", 0);
+         pref("network.proxy.backup.ssl", "");
+         pref("network.proxy.backup.ssl_port", 0);
+         pref("network.proxy.ftp", "{{PROXY_URL}}");
+         pref("network.proxy.ftp_port", {{PROXY_PORT}});
+         pref("network.proxy.http", "{{PROXY_URL}}");
+         pref("network.proxy.http_port", {{PROXY_PORT}});
+         pref("network.proxy.share_proxy_settings", true);
+         pref("network.proxy.ssl", "{{PROXY_URL}}");
+         pref("network.proxy.ssl_port", {{PROXY_PORT}});
+         pref("network.proxy.type", 1);
+       marker: "# {mark} ANSIBLE MANAGED BLOCK "
