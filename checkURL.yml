@@ -1,0 +1,25 @@
+--
+- hosts: all
+  vars:
+    url: https://mail.google.com
+    pval: 443
+  tasks:
+    - name: See if there's connecton to {{ url }}:{{ pval }}
+      uri:
+        url: "{{ url }}:{{ pval }}"
+        timeout: 2
+        return_content: yes
+      ignore_errors: yes
+      no_log: true
+      register: url_content
+
+    - block:
+        - name:
+          debug:
+            msg: "Port is not allowed...{{ url_content.status }}"
+        - meta: end_play
+      when: url_content.status < 0
+
+    - name: after
+      debug:
+        msg: "Port is allowed {{ url_content.status }}"
